@@ -1,4 +1,4 @@
-# Система управления заявками
+# Система управления заявками  
 
 Веб-приложение для управления заявками клиники, построенное с использованием Express.js, Pug и MongoDB.
 
@@ -68,16 +68,6 @@ docker exec mongo-db sh -c "mongorestore --uri='mongodb://admin:secret@localhost
 - Email: example@email.com
 - Пароль: 1234
 
-## Разработка
-
-Для разработки используйте команду:
-
-```bash
-docker compose -f compose.yaml -f compose.override.yaml up -d
-```
-
-Это запустит приложение в режиме разработки с автоматической перезагрузкой при изменении файлов.
-
 ## Структура проекта
 
 - `database/dump/` - дамп базы данных
@@ -90,7 +80,3 @@ docker compose -f compose.yaml -f compose.override.yaml up -d
   - `views/` - шаблоны Pug
 - `compose.yaml` - конфигурация Docker для продакшена
 - `compose.override.yaml` - дополнительная конфигурация для разработки
-
-## Лицензия
-
-MIT
