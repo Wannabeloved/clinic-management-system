@@ -1,0 +1,32 @@
+extends layout
+
+block content
+  h1.mb-4 Отправить заявку
+  if success
+    .alert.alert-success.mb-4
+      | Ваша заявка успешно отправлена!
+  if error
+    .alert.alert-danger.mb-4= error
+  form(action="/applications/submit" method="POST")
+    .form-group
+      label(for="fullName") ФИО
+      input(type="text" class="form-control" id="fullName" name="fullName" required)
+    .form-group
+      label(for="phoneNumber") Номер телефона
+      input(
+        type="tel"
+        class="form-control"
+        id="phoneNumber"
+        name="phoneNumber"
+        required
+        minlength="10"
+        maxlength="20"
+        pattern="[\\+\\d\\s\\(\\)\\-\\.]+"
+        title="Номер телефона может содержать только цифры и символы +()-."
+        placeholder="Введите номер телефона"
+      )
+      small.form-text.text-muted Например: 89991234567 или +7 999 123-45-67
+    .form-group
+      label(for="problemDescription") Опишите вашу проблему
+      textarea(class="form-control" id="problemDescription" name="problemDescription" required)
+    button(type="submit" class="btn btn-primary") Отправить 

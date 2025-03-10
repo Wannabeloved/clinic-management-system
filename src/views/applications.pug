@@ -1,0 +1,334 @@
+doctype html
+html
+  head
+    title Заявки
+    link(rel="stylesheet", href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css")
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css")
+    style.
+      .sort-icon {
+        font-size: 0.8em;
+        margin-left: 5px;
+        cursor: pointer;
+      }
+      .status-badge {
+        cursor: pointer;
+      }
+      .search-box {
+        max-width: 300px;
+      }
+      .status-form {
+        display: inline-block;
+      }
+      .status-button {
+        border: none;
+        background: none;
+        padding: 0;
+        margin: 0;
+        font-size: inherit;
+      }
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+      }
+      .sortable {
+        cursor: pointer;
+      }
+      .sortable:hover {
+        background-color: rgba(0,0,0,0.05);
+      }
+  body
+    nav.navbar.navbar-expand-lg.navbar-dark.bg-primary.no-print
+      .container
+        a.navbar-brand(href="/") Панель управления
+        .navbar-nav.ml-auto
+          a.nav-link.text-white(href="/logout") Выйти
+
+    .container.mt-4
+      .d-flex.justify-content-between.align-items-center.mb-4
+        h1 Заявки
+        .search-box.no-print
+          // Форма для работы без JavaScript
+          noscript
+            form.form-inline(method="GET")
+              input.form-control.mr-2(
+                type="text"
+                name="search"
+                placeholder="Поиск..."
+                value=search
+              )
+              button.btn.btn-outline-primary(type="submit")
+                i.fas.fa-search
+
+          // Форма для работы с JavaScript
+          .form-inline.js-only.d-none
+            input.form-control.mr-2#js-search(
+              type="text"
+              placeholder="Поиск..."
+              value=search
+            )
+            button.btn.btn-outline-primary#js-search-btn(type="button")
+              i.fas.fa-search
+
+      #applications-table
+        if applications && applications.length > 0
+          table.table.table-striped
+            thead
+              tr
+                th.sortable(data-sort="fullName")
+                  | ФИО
+                  noscript
+                    a.no-print(href=`/applications?sortField=fullName&sortOrder=${sortField === 'fullName' && sortOrder === 'asc' ? 'desc' : 'asc'}&search=${search || ''}&page=${currentPage}`)
+                  i.fas.sort-icon(class=`fa-sort${sortField === 'fullName' ? (sortOrder === 'asc' ? '-up' : '-down') : ''}`)
+                th.sortable(data-sort="phoneNumber")
+                  | Телефон
+                  noscript
+                    a.no-print(href=`/applications?sortField=phoneNumber&sortOrder=${sortField === 'phoneNumber' && sortOrder === 'asc' ? 'desc' : 'asc'}&search=${search || ''}&page=${currentPage}`)
+                  i.fas.sort-icon(class=`fa-sort${sortField === 'phoneNumber' ? (sortOrder === 'asc' ? '-up' : '-down') : ''}`)
+                th
+                  | Описание проблемы
+                th
+                  | Статус
+                th.sortable(data-sort="createdAt")
+                  | Дата
+                  noscript
+                    a.no-print(href=`/applications?sortField=createdAt&sortOrder=${sortField === 'createdAt' && sortOrder === 'asc' ? 'desc' : 'asc'}&search=${search || ''}&page=${currentPage}`)
+                  i.fas.sort-icon(class=`fa-sort${sortField === 'createdAt' ? (sortOrder === 'asc' ? '-up' : '-down') : ''}`)
+            tbody
+              each application in applications
+                tr
+                  td= application.fullName
+                  td= application.phoneNumber
+                  td= application.problemDescription
+                  td
+                    // Версия без JavaScript
+                    noscript
+                      form.status-form(method="POST" action=`/applications/${application._id}/status`)
+                        select.form-control.form-control-sm(name="status" onchange="this.form.submit()")
+                          option(value="new" selected=application.status === 'new') Новая
+                          option(value="in_progress" selected=application.status === 'in_progress') В работе
+                          option(value="completed" selected=application.status === 'completed') Завершена
+                          option(value="cancelled" selected=application.status === 'cancelled') Отменена
+
+                    // Версия с JavaScript
+                    .dropdown.d-none.js-only
+                      span.badge.badge-pill.status-badge(
+                        class=`badge-${application.status === 'new' ? 'primary' : application.status === 'in_progress' ? 'warning' : application.status === 'completed' ? 'success' : 'danger'}`
+                        data-toggle="dropdown"
+                      )= application.status === 'new' ? 'Новая' : application.status === 'in_progress' ? 'В работе' : application.status === 'completed' ? 'Завершена' : 'Отменена'
+                      .dropdown-menu
+                        a.dropdown-item(href="#" data-status="new" data-id=application._id) Новая
+                        a.dropdown-item(href="#" data-status="in_progress" data-id=application._id) В работе
+                        a.dropdown-item(href="#" data-status="completed" data-id=application._id) Завершена
+                        a.dropdown-item(href="#" data-status="cancelled" data-id=application._id) Отменена
+                  td= new Date(application.createdAt).toLocaleString('ru-RU')
+        else
+          .alert.alert-info.mt-4 Заявок пока нет
+
+        if pages > 1
+          nav.mt-4.no-print
+            ul.pagination.justify-content-center
+              li.page-item(class=currentPage === 1 ? 'disabled' : '')
+                a.page-link(href=`/applications?page=${currentPage-1}&sortField=${sortField}&sortOrder=${sortOrder}&search=${search || ''}`) Назад
+              - for (let i = 1; i <= pages; i++)
+                li.page-item(class=currentPage === i ? 'active' : '')
+                  a.page-link(href=`/applications?page=${i}&sortField=${sortField}&sortOrder=${sortOrder}&search=${search || ''}`)= i
+              li.page-item(class=currentPage === pages ? 'disabled' : '')
+                a.page-link(href=`/applications?page=${currentPage+1}&sortField=${sortField}&sortOrder=${sortOrder}&search=${search || ''}`) Вперед
+
+    script(src="https://code.jquery.com/jquery-3.5.1.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js")
+    script(src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js")
+    script.
+      // Показываем JavaScript версию элементов
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.js-only').forEach(el => el.classList.remove('d-none'));
+        document.querySelectorAll('noscript').forEach(el => el.style.display = 'none');
+      });
+
+      // Функция обновления таблицы
+      function updateTable(url) {
+        $.ajax({
+          url: url,
+          method: 'GET',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          success: function(data) {
+            const parser = new DOMParser();
+            const newDoc = parser.parseFromString(data, 'text/html');
+            const newContent = newDoc.querySelector('#applications-table');
+            const oldContent = document.querySelector('#applications-table');
+            if (newContent && oldContent) {
+              oldContent.innerHTML = newContent.innerHTML;
+              reinitializeTable();
+            }
+            // Обновляем URL без перезагрузки страницы
+            history.pushState({}, '', url);
+          },
+          error: function(xhr) {
+            if (xhr.status === 401) {
+              window.location.reload();
+            }
+          }
+        });
+      }
+
+      // Функция для реинициализации таблицы после AJAX-обновления
+      function reinitializeTable() {
+        // Показываем JavaScript версию элементов
+        document.querySelectorAll('.js-only').forEach(el => el.classList.remove('d-none'));
+        document.querySelectorAll('noscript').forEach(el => el.style.display = 'none');
+
+        // Применяем текущую сортировку
+        if (window.currentSort) {
+          clientSideSort(window.currentSort.field, window.currentSort.order);
+        }
+
+        // Реинициализируем выпадающие списки Bootstrap
+        $('.dropdown-toggle').dropdown();
+      }
+
+      // Автоматическое обновление каждые 3 минуты
+      setInterval(function() {
+        updateTable(window.location.href);
+      }, 180000);
+
+      // Обработка поиска
+      $(document).ready(function() {
+        let searchTimeout;
+
+        function performSearch() {
+          const searchQuery = $('#js-search').val();
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('search', searchQuery);
+          currentUrl.searchParams.set('page', '1'); // Сброс на первую страницу при поиске
+          updateTable(currentUrl.toString());
+        }
+
+        // Обработка ввода в поле поиска с debounce
+        $('#js-search').on('input', function() {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(performSearch, 300);
+        });
+
+        // Обработка клика по кнопке поиска
+        $('#js-search-btn').click(performSearch);
+
+        // Обработка изменения статуса
+        $(document).on('click', '.dropdown-item', function(e) {
+          e.preventDefault();
+          const status = $(this).data('status');
+          const id = $(this).data('id');
+          const badge = $(this).closest('td').find('.status-badge');
+
+          $.ajax({
+            url: `/applications/${id}/status`,
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            data: JSON.stringify({ status }),
+            contentType: 'application/json',
+            success: function(response) {
+              const statusText = {
+                'new': 'Новая',
+                'in_progress': 'В работе',
+                'completed': 'Завершена',
+                'cancelled': 'Отменена'
+              }[status];
+
+              const statusClass = {
+                'new': 'primary',
+                'in_progress': 'warning',
+                'completed': 'success',
+                'cancelled': 'danger'
+              }[status];
+
+              badge
+                .removeClass('badge-primary badge-warning badge-success badge-danger')
+                .addClass(`badge-${statusClass}`)
+                .text(statusText);
+            },
+            error: function(xhr, status, error) {
+              if (xhr.status === 401) {
+                window.location.reload();
+              } else {
+                alert('Ошибка при обновлении статуса: ' + error);
+                location.reload();
+              }
+            }
+          });
+        });
+
+        // Обработка навигации браузера (кнопки вперед/назад)
+        window.addEventListener('popstate', function() {
+          updateTable(window.location.href);
+        });
+      });
+
+      // Функция для клиентской сортировки
+      function clientSideSort(field, order) {
+        const table = document.querySelector('table');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        rows.sort((a, b) => {
+          let aValue = a.children[getColumnIndex(field)].textContent.trim();
+          let bValue = b.children[getColumnIndex(field)].textContent.trim();
+
+          if (field === 'createdAt') {
+            aValue = new Date(aValue);
+            bValue = new Date(bValue);
+          }
+
+          if (aValue < bValue) return order === 'asc' ? -1 : 1;
+          if (aValue > bValue) return order === 'asc' ? 1 : -1;
+          return 0;
+        });
+
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row));
+
+        // Обновляем иконки сортировки
+        document.querySelectorAll('.sort-icon').forEach(icon => {
+          const parentTh = icon.closest('th');
+          const sortField = parentTh?.dataset.sort;
+          
+          if (sortField === field) {
+            icon.className = `fas sort-icon fa-sort-${order === 'asc' ? 'up' : 'down'}`;
+          } else {
+            icon.className = 'fas sort-icon fa-sort';
+          }
+        });
+      }
+
+      function getColumnIndex(field) {
+        switch(field) {
+          case 'fullName': return 0;
+          case 'phoneNumber': return 1;
+          case 'createdAt': return 4;
+          default: return 0;
+        }
+      }
+
+      // Обработчик клиентской сортировки
+      $(document).ready(function() {
+        // Делаем currentSort глобальным для доступа из reinitializeTable
+        window.currentSort = {
+          field: 'createdAt',
+          order: 'desc'
+        };
+
+        $('.sortable').click(function() {
+          const field = $(this).data('sort');
+          if (field) {
+            window.currentSort.order = window.currentSort.field === field && window.currentSort.order === 'asc' ? 'desc' : 'asc';
+            window.currentSort.field = field;
+            clientSideSort(field, window.currentSort.order);
+          }
+        });
+
+        // Инициализация начальной сортировки
+        clientSideSort(window.currentSort.field, window.currentSort.order);
+      }); 

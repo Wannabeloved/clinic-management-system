@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      target: development
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: "mongodb://root:example@mongo:27017/express-mongo-db-dev?authSource=admin"
+      NODE_ENV: development
+    develop:
+      watch:
+        # Синхронизация исходного кода с перезапуском
+        - action: sync+restart
+          path: ./src
+          target: /app/src
+          ignore:
+            - "**/*.test.js" # Игнорируем изменения в тестах
+            - node_modules/
+
+        # Только синхронизация для тестов
+        - action: sync
+          path: ./src
+          target: /app/src
+          ignore:
+            - "!**/*.test.js" # Синхронизируем только тестовые файлы
+
+        # Только синхронизация для статических файлов в public
+        - action: sync
+          path: ./src/public
+          target: /app/src/public
+
+        # Только синхронизация для шаблонов
+        - action: sync
+          path: ./src/views
+          target: /app/src/views
+
+        # Только синхронизация для статических ресурсов
+        - action: sync
+          path: ./src/resources
+          target: /app/src/resources
+
+        # Перестройка при изменении зависимостей
+        - action: rebuild
+          path: package.json
+          target: /app/package.json
+
+  mongo:
+    image: mongo:7.0
+    container_name: mongo-db-dev
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root # Устанавливаем root-пользователя
+      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_DATABASE: express-mongo-db-dev
+      MONGO_LOG_LEVEL: error # Устанавливаем уровень логирования в error

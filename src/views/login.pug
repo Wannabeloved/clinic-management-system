@@ -1,0 +1,42 @@
+extends layout
+
+block styles
+  style.
+    .login-container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 5px;
+    }
+    .login-title {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+block content
+  .login-container
+    h2.login-title Вход для операторов
+    if error
+      .alert.alert-danger= error
+    form(action="/login" method="POST")
+      .form-group
+        label(for="email") Email
+        input.form-control(
+          type="email"
+          id="email"
+          name="email"
+          required
+          placeholder="Введите email"
+        )
+      .form-group
+        label(for="password") Пароль
+        input.form-control(
+          type="password"
+          id="password"
+          name="password"
+          required
+          placeholder="Введите пароль"
+        )
+      button.btn.btn-primary.btn-block(type="submit") Войти
